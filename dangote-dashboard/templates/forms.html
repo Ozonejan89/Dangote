@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dangote Delivery — Data Entry</title>
+<style>
+:root{
+    --dg:#004F9F;--dg-dk:#00264D;--dg-lt:#E8F4FD;
+    --ok:#059669;--warn:#D97706;--err:#DC2626;
+    --bg:#F1F5F9;--card:#FFF;--txt:#1E293B;--mut:#64748B;--brd:#E2E8F0;
+    --sh:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+    --r:14px;--rs:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* ── HEADER ── */
+.hdr{background:linear-gradient(135deg,var(--dg-dk),var(--dg));color:#fff;padding:18px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.12)}
+.hdr-l{display:flex;align-items:center;gap:14px}
+.hdr-l .logo{width:44px;height:44px;background:#fff;color:var(--dg);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900}
+.hdr-l h1{font-size:19px;font-weight:700}.hdr-l p{font-size:12px;opacity:.7}
+.hdr-r{display:flex;gap:10px}
+.hdr-r a{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 16px;border-radius:var(--rs);font-size:12px;text-decoration:none;font-weight:600;transition:.2s}
+.hdr-r a:hover{background:rgba(255,255,255,.25)}
+.hdr-r a.primary{background:#3B82F6;border-color:#3B82F6}
+
+/* ── LAYOUT ── */
+.wrap{display:flex;min-height:calc(100vh - 68px)}
+.sidebar{width:240px;background:var(--card);border-right:1px solid var(--brd);padding:16px 0;position:sticky;top:68px;height:calc(100vh - 68px);overflow-y:auto}
+.sidebar h3{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--mut);padding:12px 20px 6px;font-weight:700}
+.sidebar a{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:13px;color:var(--txt);text-decoration:none;transition:.15s;border-left:3px solid transparent}
+.sidebar a:hover{background:var(--dg-lt);color:var(--dg)}
+.sidebar a.on{background:var(--dg-lt);color:var(--dg);border-left-color:var(--dg);font-weight:700}
+.sidebar a .cnt{margin-left:auto;background:var(--brd);padding:1px 8px;border-radius:12px;font-size:10px;font-weight:700}
+.content{flex:1;padding:24px 28px 40px;max-width:1200px}
+
+/* ── FLASH MESSAGES ── */
+.flash{padding:12px 18px;border-radius:var(--rs);margin-bottom:16px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px}
+.flash.success{background:#D1FAE5;color:#065F46;border-left:4px solid var(--ok)}
+.flash.error{background:#FEE2E2;color:#991B1B;border-left:4px solid var(--err)}
+
+/* ── SECTION TITLE ── */
+.sec-title{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.sec-title h2{font-size:20px;font-weight:700}
+.sec-title .badge{font-size:11px;background:var(--dg-lt);color:var(--dg);padding:4px 12px;border-radius:20px;font-weight:700}
+
+/* ── FORM CARD ── */
+.form-card{background:var(--card);border-radius:var(--r);padding:24px;box-shadow:var(--sh);margin-bottom:24px}
+.form-card h3{font-size:15px;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--brd);display:flex;align-items:center;gap:8px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.3px}
+.form-group label .req{color:var(--err)}
+.form-group input,.form-group select,.form-group textarea{
+    padding:10px 12px;border:1.5px solid var(--brd);border-radius:var(--rs);font-size:13px;
+    font-family:inherit;color:var(--txt);transition:.2s;background:#FAFBFC}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+    border-color:var(--dg);outline:none;box-shadow:0 0 0 3px rgba(0,79,159,.1);background:#fff}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-group select{cursor:pointer}
+.btn-row{display:flex;gap:10px;margin-top:18px;justify-content:flex-end}
+.btn{padding:10px 24px;border:none;border-radius:var(--rs);font-size:13px;font-weight:700;cursor:pointer;transition:.2s;font-family:inherit}
+.btn-primary{background:var(--dg);color:#fff}.btn-primary:hover{background:var(--dg-dk)}
+.btn-success{background:var(--ok);color:#fff}.btn-success:hover{background:#047857}
+.btn-secondary{background:var(--brd);color:var(--txt)}.btn-secondary:hover{background:#CBD5E1}
+.btn-sm{padding:5px 12px;font-size:11px;border-radius:6px}
+.btn-danger{background:#FEE2E2;color:var(--err);border:1px solid #FECACA}.btn-danger:hover{background:var(--err);color:#fff}
+
+/* ── TABLE ── */
+.table-card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;margin-bottom:24px}
+.table-card .th{padding:16px 20px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center}
+.table-card .th h3{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.table-card .th .cnt{background:var(--dg-lt);color:var(--dg);padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:10px 14px;background:#F8FAFC;font-weight:700;color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--brd);position:sticky;top:0}
+td{padding:10px 14px;border-bottom:1px solid var(--brd);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:hover td{background:#F8FAFC}
+.sb{display:inline-flex;padding:3px 9px;border-radius:16px;font-size:10px;font-weight:700}
+.sb.ok{background:#D1FAE5;color:#065F46}.sb.warn{background:#FEF3C7;color:#92400E}
+.sb.bad{background:#FEE2E2;color:#991B1B}.sb.info{background:#DBEAFE;color:#1E40AF}
+
+/* ── RESPONSIVE ── */
+@media(max-width:800px){
+    .sidebar{display:none}
+    .content{padding:16px}
+    .form-grid{grid-template-columns:1fr}
+    .hdr{flex-direction:column;text-align:center}
+}
+
+/* ── FORM SECTION VISIBILITY ── */
+.form-section{display:none}
+.form-section.on{display:block}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+    <div class="hdr-l">
+        <div class="logo">D</div>
+        <div><h1>Dangote Delivery — Data Entry</h1><p>Add & manage records across all tables</p></div>
+    </div>
+    <div class="hdr-r">
+        <a href="/">📊 Dashboard</a>
+        <a href="/forms" class="primary">📝 Forms</a>
+    </div>
+</header>
+
+<div class="wrap">
+    <!-- SIDEBAR NAVIGATION -->
+    <nav class="sidebar">
+        <h3>📋 Add Records</h3>
+        <a href="?table=deliveries" class="{{ 'on' if table=='deliveries' else '' }}">🚚 Deliveries</a>
+        <a href="?table=trucks" class="{{ 'on' if table=='trucks' else '' }}">🚛 Trucks</a>
+        <a href="?table=drivers" class="{{ 'on' if table=='drivers' else '' }}">👨‍✈️ Drivers</a>
+        <a href="?table=customers" class="{{ 'on' if table=='customers' else '' }}">👥 Customers</a>
+        <a href="?table=fuel_logs" class="{{ 'on' if table=='fuel_logs' else '' }}">⛽ Fuel Logs</a>
+        <a href="?table=maintenance_logs" class="{{ 'on' if table=='maintenance_logs' else '' }}">🔧 Maintenance</a>
+        <a href="?table=incidents" class="{{ 'on' if table=='incidents' else '' }}">🚨 Incidents</a>
+        <a href="?table=complaints" class="{{ 'on' if table=='complaints' else '' }}">📢 Complaints</a>
+        <h3>⚙️ Configuration</h3>
+        <a href="?table=routes" class="{{ 'on' if table=='routes' else '' }}">🗺️ Routes</a>
+        <a href="?table=products" class="{{ 'on' if table=='products' else '' }}">📦 Products</a>
+        <a href="?table=depots" class="{{ 'on' if table=='depots' else '' }}">🏭 Depots</a>
+        <a href="?table=regions" class="{{ 'on' if table=='regions' else '' }}">🌍 Regions</a>
+    </nav>
+
+    <!-- MAIN CONTENT -->
+    <div class="content">
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for cat, msg in messages %}
+            <div class="flash {{ cat }}">
+                {{ '✅' if cat == 'success' else '❌' }} {{ msg }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- ═══════════ DELIVERIES ═══════════ -->
+        {% if table == 'deliveries' %}
+        <div class="sec-title"><h2>🚚 Deliveries</h2><span class="badge">{{ records|length }} recent records</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Delivery</h3>
+            <form action="/add/delivery" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Delivery ID <span class="req">*</span></label>
+                        <input name="delivery_id" placeholder="DEL-2024-99999" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Truck <span class="req">*</span></label>
+                        <select name="truck_id" required>
+                            <option value="">-- Select Truck --</option>
+                            {% for t in lookups.trucks %}
+                            <option value="{{ t.id }}">{{ t.truck_id }} — {{ t.type }} ({{ t.plate_number }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Driver <span class="req">*</span></label>
+                        <select name="driver_id" required>
+                            <option value="">-- Select Driver --</option>
+                            {% for d in lookups.drivers %}
+                            <option value="{{ d.id }}">{{ d.driver_id }} — {{ d.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer <span class="req">*</span></label>
+                        <select name="customer_id" required>
+                            <option value="">-- Select Customer --</option>
+                            {% for c in lookups.customers %}
+                            <option value="{{ c.id }}">{{ c.name }} ({{ c.city }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Route <span class="req">*</span></label>
+                        <select name="route_id" required>
+                            <option value="">-- Select Route --</option>
+                            {% for r in lookups.routes %}
+                            <option value="{{ r.id }}">{{ r.route_code }}: {{ r.origin }} → {{ r.destination }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Product <span class="req">*</span></label>
+                        <select name="product_id" required>
+                            <option value="">-- Select Product --</option>
+                            {% for p in lookups.products %}
+                            <option value="{{ p.id }}">{{ p.name }} ({{ p.category }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity (Tons) <span class="req">*</span></label>
+                        <input name="quantity_tons" type="number" step="0.1" placeholder="30.0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Revenue (₦) <span class="req">*</span></label>
+                        <input name="revenue" type="number" step="1" placeholder="2550000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fuel Cost (₦) <span class="req">*</span></label>
+                        <input name="fuel_cost" type="number" step="1" placeholder="85000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Toll Cost (₦) <span class="req">*</span></label>
+                        <input name="toll_cost" type="number" step="1" placeholder="15000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Driver Allowance (₦) <span class="req">*</span></label>
+                        <input name="driver_allowance" type="number" step="1" placeholder="25000" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Other Cost (₦)</label>
+                        <input name="other_cost" type="number" step="1" placeholder="5000" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Departure Date/Time <span class="req">*</span></label>
+                        <input name="departure_date" type="datetime-local" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Arrival Date/Time</label>
+                        <input name="arrival_date" type="datetime-local">
+                    </div>
+                    <div class="form-group">
+                        <label>Status <span class="req">*</span></label>
+                        <select name="status" required>
+                            <option value="In Transit">In Transit</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>On Time?</label>
+                        <select name="on_time">
+                            <option value="1">Yes</option>
+                            <option value="0">No</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Customer Rating</label>
+                        <select name="customer_rating">
+                            <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                            <option value="4" selected>⭐⭐⭐⭐ (4)</option>
+                            <option value="3">⭐⭐⭐ (3)</option>
+                            <option value="2">⭐⭐ (2)</option>
+                            <option value="1">⭐ (1)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button type="reset" class="btn btn-secondary">Clear</button>
+                    <button type="submit" class="btn btn-success">💾 Save Delivery</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 Recent Deliveries <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Delivery ID</th><th>Truck</th><th>Driver</th><th>Customer</th><th>Product</th><th>Tons</th><th>Revenue</th><th>Status</th><th>OTD</th><th>Date</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td><strong>{{ r.delivery_id }}</strong></td>
+                        <td>{{ r.truck_code or '—' }}</td>
+                        <td>{{ r.driver_name or '—' }}</td>
+                        <td>{{ r.customer_name or '—' }}</td>
+                        <td>{{ r.product_name or '—' }}</td>
+                        <td>{{ r.quantity_tons }}</td>
+                        <td>₦{{ "{:,.0f}".format(r.revenue) }}</td>
+                        <td><span class="sb {{ 'ok' if r.status=='Completed' else 'warn' if r.status=='In Transit' else 'bad' }}">{{ r.status }}</span></td>
+                        <td>{{ '✅' if r.on_time else '❌' }}</td>
+                        <td>{{ r.departure_date[:10] }}</td>
+                        <td><form action="/delete/deliveries/{{ r.id }}" method="POST" onsubmit="return confirm('Delete this record?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ TRUCKS ═══════════ -->
+        {% if table == 'trucks' %}
+        <div class="sec-title"><h2>🚛 Trucks</h2><span class="badge">{{ records|length }} vehicles</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Truck</h3>
+            <form action="/add/truck" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Truck ID <span class="req">*</span></label>
+                        <input name="truck_id" placeholder="DGL-T041" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Plate Number <span class="req">*</span></label>
+                        <input name="plate_number" placeholder="LAG-123AB" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type <span class="req">*</span></label>
+                        <select name="type" required>
+                            <option value="Trailer">Trailer</option>
+                            <option value="Flatbed">Flatbed</option>
+                            <option value="Tipper">Tipper</option>
+                            <option value="Tanker">Tanker</option>
+                            <option value="Box Truck">Box Truck</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Capacity (Tons) <span class="req">*</span></label>
+                        <input name="capacity_tons" type="number" step="0.5" value="30" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Year Acquired <span class="req">*</span></label>
+                        <input name="year_acquired" type="number" min="2015" max="2030" value="2024" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Depot <span class="req">*</span></label>
+                        <select name="depot_id" required>
+                            {% for d in lookups.depots %}
+                            <option value="{{ d.id }}">{{ d.name }} ({{ d.city }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select name="status">
+                            <option value="Active">Active</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Out of Service">Out of Service</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fuel Type</label>
+                        <select name="fuel_type">
+                            <option value="Diesel">Diesel</option>
+                            <option value="Petrol">Petrol</option>
+                            <option value="CNG">CNG</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Service Date</label>
+                        <input name="last_service_date" type="date">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button type="reset" class="btn btn-secondary">Clear</button>
+                    <button type="submit" class="btn btn-success">💾 Save Truck</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Trucks <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Truck ID</th><th>Plate</th><th>Type</th><th>Capacity</th><th>Year</th><th>Depot</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td><strong>{{ r.truck_id }}</strong></td>
+                        <td>{{ r.plate_number }}</td>
+                        <td>{{ r.type }}</td>
+                        <td>{{ r.capacity_tons }}t</td>
+                        <td>{{ r.year_acquired }}</td>
+                        <td>{{ r.depot_name or '—' }} ({{ r.depot_city or '' }})</td>
+                        <td><span class="sb {{ 'ok' if r.status=='Active' else 'warn' if r.status=='Maintenance' else 'bad' }}">{{ r.status }}</span></td>
+                        <td><form action="/delete/trucks/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ DRIVERS ═══════════ -->
+        {% if table == 'drivers' %}
+        <div class="sec-title"><h2>👨‍✈️ Drivers</h2><span class="badge">{{ records|length }} drivers</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Driver</h3>
+            <form action="/add/driver" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Driver ID <span class="req">*</span></label><input name="driver_id" placeholder="DRV-031" required></div>
+                    <div class="form-group"><label>Full Name <span class="req">*</span></label><input name="full_name" placeholder="Full Name" required></div>
+                    <div class="form-group"><label>Phone</label><input name="phone" placeholder="08012345678"></div>
+                    <div class="form-group"><label>License Class</label><select name="license_class"><option value="Class E">Class E (Heavy)</option><option value="Class D">Class D (Medium)</option><option value="Class C">Class C (Light)</option></select></div>
+                    <div class="form-group"><label>License Expiry</label><input name="license_expiry" type="date"></div>
+                    <div class="form-group"><label>Depot <span class="req">*</span></label><select name="depot_id" required>{% for d in lookups.depots %}<option value="{{ d.id }}">{{ d.name }} ({{ d.city }})</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Hire Date</label><input name="hire_date" type="date"></div>
+                    <div class="form-group"><label>Status</label><select name="status"><option value="Active">Active</option><option value="On Leave">On Leave</option><option value="Suspended">Suspended</option><option value="Inactive">Inactive</option></select></div>
+                    <div class="form-group"><label>Safety Score (0-100)</label><input name="safety_score" type="number" min="0" max="100" value="90"></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Driver</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Drivers <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Driver ID</th><th>Name</th><th>Phone</th><th>License</th><th>Expiry</th><th>Depot</th><th>Status</th><th>Safety</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.driver_id }}</strong></td><td>{{ r.full_name }}</td><td>{{ r.phone or '—' }}</td>
+                        <td>{{ r.license_class }}</td><td>{{ r.license_expiry or '—' }}</td>
+                        <td>{{ r.depot_city or '—' }}</td>
+                        <td><span class="sb {{ 'ok' if r.status=='Active' else 'warn' if r.status=='On Leave' else 'bad' }}">{{ r.status }}</span></td>
+                        <td>{{ r.safety_score }}</td>
+                        <td><form action="/delete/drivers/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ CUSTOMERS ═══════════ -->
+        {% if table == 'customers' %}
+        <div class="sec-title"><h2>👥 Customers</h2><span class="badge">{{ records|length }} clients</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Customer</h3>
+            <form action="/add/customer" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Company Name <span class="req">*</span></label><input name="name" required placeholder="Company Ltd"></div>
+                    <div class="form-group"><label>Customer Type <span class="req">*</span></label><select name="customer_type" required><option value="Construction">Construction</option><option value="Distributor">Distributor</option><option value="Wholesale">Wholesale</option><option value="Retail">Retail</option><option value="Government">Government</option><option value="Agriculture">Agriculture</option><option value="Industrial">Industrial</option><option value="Logistics">Logistics</option></select></div>
+                    <div class="form-group"><label>City <span class="req">*</span></label><input name="city" required placeholder="Lagos"></div>
+                    <div class="form-group"><label>State <span class="req">*</span></label><input name="state" required placeholder="Lagos"></div>
+                    <div class="form-group"><label>Region <span class="req">*</span></label><select name="region_id" required>{% for r in lookups.regions %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Contact Person</label><input name="contact_person" placeholder="Full Name"></div>
+                    <div class="form-group"><label>Phone</label><input name="phone" placeholder="08012345678"></div>
+                    <div class="form-group"><label>Status</label><select name="status"><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Customer</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Customers <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>City</th><th>State</th><th>Region</th><th>Contact</th><th>Status</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.name }}</strong></td><td>{{ r.customer_type }}</td><td>{{ r.city }}</td><td>{{ r.state }}</td>
+                        <td>{{ r.region_name or '—' }}</td><td>{{ r.contact_person or '—' }}</td>
+                        <td><span class="sb {{ 'ok' if r.status=='Active' else 'bad' }}">{{ r.status }}</span></td>
+                        <td><form action="/delete/customers/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ FUEL LOGS ═══════════ -->
+        {% if table == 'fuel_logs' %}
+        <div class="sec-title"><h2>⛽ Fuel Logs</h2><span class="badge">{{ records|length }} recent logs</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add Fuel Log</h3>
+            <form action="/add/fuel_log" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Truck <span class="req">*</span></label><select name="truck_id" required>{% for t in lookups.trucks %}<option value="{{ t.id }}">{{ t.truck_id }} ({{ t.plate_number }})</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Delivery ID (ref)</label><input name="delivery_id" type="number" placeholder="Optional"></div>
+                    <div class="form-group"><label>Date <span class="req">*</span></label><input name="log_date" type="date" required></div>
+                    <div class="form-group"><label>Litres <span class="req">*</span></label><input name="liters" type="number" step="0.1" required placeholder="150"></div>
+                    <div class="form-group"><label>Cost per Litre (₦) <span class="req">*</span></label><input name="cost_per_liter" type="number" step="0.1" required placeholder="700"></div>
+                    <div class="form-group"><label>Odometer (km)</label><input name="odometer_km" type="number" step="0.1" placeholder="0"></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Fuel Log</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 Recent Fuel Logs <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Truck</th><th>Date</th><th>Litres</th><th>₦/Litre</th><th>Total Cost</th><th>Odometer</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.truck_code or r.truck_id }}</strong></td><td>{{ r.log_date }}</td>
+                        <td>{{ r.liters }}</td><td>₦{{ "{:,.0f}".format(r.cost_per_liter) }}</td><td>₦{{ "{:,.0f}".format(r.total_cost) }}</td>
+                        <td>{{ "{:,.0f}".format(r.odometer_km or 0) }} km</td>
+                        <td><form action="/delete/fuel_logs/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ MAINTENANCE ═══════════ -->
+        {% if table == 'maintenance_logs' %}
+        <div class="sec-title"><h2>🔧 Maintenance Logs</h2><span class="badge">{{ records|length }} recent</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add Maintenance Record</h3>
+            <form action="/add/maintenance" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Truck <span class="req">*</span></label><select name="truck_id" required>{% for t in lookups.trucks %}<option value="{{ t.id }}">{{ t.truck_id }} ({{ t.plate_number }})</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Date <span class="req">*</span></label><input name="log_date" type="date" required></div>
+                    <div class="form-group"><label>Type <span class="req">*</span></label><select name="type" required><option value="Routine Service">Routine Service</option><option value="Tyre Replacement">Tyre Replacement</option><option value="Engine Repair">Engine Repair</option><option value="Brake Overhaul">Brake Overhaul</option><option value="Transmission">Transmission</option><option value="Electrical">Electrical</option><option value="Body Work">Body Work</option><option value="Other">Other</option></select></div>
+                    <div class="form-group"><label>Cost (₦) <span class="req">*</span></label><input name="cost" type="number" step="1" required placeholder="250000"></div>
+                    <div class="form-group"><label>Downtime (Hours)</label><input name="downtime_hours" type="number" value="0"></div>
+                    <div class="form-group"><label>Vendor</label><input name="vendor" placeholder="Workshop name"></div>
+                    <div class="form-group full"><label>Description</label><textarea name="description" placeholder="Details of work done..."></textarea></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Record</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 Recent Maintenance <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Truck</th><th>Date</th><th>Type</th><th>Cost</th><th>Downtime</th><th>Vendor</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.truck_code or r.truck_id }}</strong></td><td>{{ r.log_date }}</td>
+                        <td>{{ r.type }}</td><td>₦{{ "{:,.0f}".format(r.cost) }}</td><td>{{ r.downtime_hours }}h</td><td>{{ r.vendor or '—' }}</td>
+                        <td><form action="/delete/maintenance_logs/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ INCIDENTS ═══════════ -->
+        {% if table == 'incidents' %}
+        <div class="sec-title"><h2>🚨 Incidents</h2><span class="badge">{{ records|length }} records</span></div>
+
+        <div class="form-card">
+            <h3>➕ Report Incident</h3>
+            <form action="/add/incident" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Date <span class="req">*</span></label><input name="incident_date" type="date" required></div>
+                    <div class="form-group"><label>Truck <span class="req">*</span></label><select name="truck_id" required>{% for t in lookups.trucks %}<option value="{{ t.id }}">{{ t.truck_id }}</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Driver <span class="req">*</span></label><select name="driver_id" required>{% for d in lookups.drivers %}<option value="{{ d.id }}">{{ d.full_name }}</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Type <span class="req">*</span></label><select name="type" required><option value="Road Accident">Road Accident</option><option value="Tyre Burst">Tyre Burst</option><option value="Cargo Damage">Cargo Damage</option><option value="Road Robbery">Road Robbery</option><option value="Near Miss">Near Miss</option><option value="Brake Failure">Brake Failure</option><option value="Driver Fatigue">Driver Fatigue</option><option value="Overloading">Overloading</option><option value="Other">Other</option></select></div>
+                    <div class="form-group"><label>Severity <span class="req">*</span></label><select name="severity" required><option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option></select></div>
+                    <div class="form-group"><label>Location</label><input name="location" placeholder="Road / Area"></div>
+                    <div class="form-group"><label>Injuries</label><input name="injuries" type="number" value="0" min="0"></div>
+                    <div class="form-group"><label>Damage Cost (₦)</label><input name="damage_cost" type="number" value="0" step="1"></div>
+                    <div class="form-group"><label>Resolved?</label><select name="resolved"><option value="0">No</option><option value="1">Yes</option></select></div>
+                    <div class="form-group full"><label>Description</label><textarea name="description" placeholder="What happened..."></textarea></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Incident</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Incidents <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Date</th><th>Truck</th><th>Driver</th><th>Type</th><th>Severity</th><th>Injuries</th><th>Damage</th><th>Resolved</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td>{{ r.incident_date }}</td><td>{{ r.truck_code or '—' }}</td><td>{{ r.driver_name or '—' }}</td>
+                        <td>{{ r.type }}</td>
+                        <td><span class="sb {{ 'bad' if r.severity=='High' else 'warn' if r.severity=='Medium' else 'info' }}">{{ r.severity }}</span></td>
+                        <td>{{ r.injuries }}</td><td>₦{{ "{:,.0f}".format(r.damage_cost or 0) }}</td>
+                        <td>{{ '✅' if r.resolved else '❌' }}</td>
+                        <td><form action="/delete/incidents/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ COMPLAINTS ═══════════ -->
+        {% if table == 'complaints' %}
+        <div class="sec-title"><h2>📢 Complaints</h2><span class="badge">{{ records|length }} records</span></div>
+
+        <div class="form-card">
+            <h3>➕ Log Complaint</h3>
+            <form action="/add/complaint" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Date <span class="req">*</span></label><input name="complaint_date" type="date" required></div>
+                    <div class="form-group"><label>Customer <span class="req">*</span></label><select name="customer_id" required>{% for c in lookups.customers %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select></div>
+                    <div class="form-group"><label>Delivery ID (ref)</label><input name="delivery_id" type="number" placeholder="Optional"></div>
+                    <div class="form-group"><label>Category <span class="req">*</span></label><select name="category" required><option value="Late Delivery">Late Delivery</option><option value="Damaged Goods">Damaged Goods</option><option value="Wrong Product">Wrong Product</option><option value="Short Delivery">Short Delivery</option><option value="Poor Communication">Poor Communication</option><option value="Driver Behavior">Driver Behavior</option><option value="Billing Error">Billing Error</option><option value="Other">Other</option></select></div>
+                    <div class="form-group"><label>Severity</label><select name="severity"><option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option></select></div>
+                    <div class="form-group"><label>Resolved?</label><select name="resolved"><option value="0">No</option><option value="1">Yes</option></select></div>
+                    <div class="form-group"><label>Resolution Days</label><input name="resolution_days" type="number" value="0" min="0"></div>
+                    <div class="form-group full"><label>Description</label><textarea name="description" placeholder="Complaint details..."></textarea></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Complaint</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Complaints <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Category</th><th>Severity</th><th>Resolved</th><th>Days</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td>{{ r.complaint_date }}</td><td>{{ r.customer_name or '—' }}</td><td>{{ r.category }}</td>
+                        <td><span class="sb {{ 'bad' if r.severity=='High' else 'warn' if r.severity=='Medium' else 'info' }}">{{ r.severity }}</span></td>
+                        <td>{{ '✅' if r.resolved else '❌' }}</td><td>{{ r.resolution_days }}</td>
+                        <td><form action="/delete/complaints/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ ROUTES ═══════════ -->
+        {% if table == 'routes' %}
+        <div class="sec-title"><h2>🗺️ Routes</h2><span class="badge">{{ records|length }} routes</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Route</h3>
+            <form action="/add/route" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Route Code <span class="req">*</span></label><input name="route_code" placeholder="RT-016" required></div>
+                    <div class="form-group"><label>Origin <span class="req">*</span></label><input name="origin" placeholder="Lagos" required></div>
+                    <div class="form-group"><label>Destination <span class="req">*</span></label><input name="destination" placeholder="Kano" required></div>
+                    <div class="form-group"><label>Distance (km) <span class="req">*</span></label><input name="distance_km" type="number" step="0.1" required></div>
+                    <div class="form-group"><label>Estimated Hours <span class="req">*</span></label><input name="estimated_hours" type="number" step="0.5" required></div>
+                    <div class="form-group"><label>Toll Cost (₦)</label><input name="toll_cost" type="number" value="0"></div>
+                    <div class="form-group"><label>Risk Level</label><select name="risk_level"><option value="Low">Low</option><option value="Medium">Medium</option><option value="High">High</option></select></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Route</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Routes <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Code</th><th>Origin</th><th>Destination</th><th>Distance</th><th>Hours</th><th>Toll</th><th>Risk</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.route_code }}</strong></td><td>{{ r.origin }}</td><td>{{ r.destination }}</td>
+                        <td>{{ r.distance_km }} km</td><td>{{ r.estimated_hours }}h</td><td>₦{{ "{:,.0f}".format(r.toll_cost) }}</td>
+                        <td><span class="sb {{ 'bad' if r.risk_level=='High' else 'warn' if r.risk_level=='Medium' else 'ok' }}">{{ r.risk_level }}</span></td>
+                        <td><form action="/delete/routes/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ PRODUCTS ═══════════ -->
+        {% if table == 'products' %}
+        <div class="sec-title"><h2>📦 Products</h2><span class="badge">{{ records|length }} products</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Product</h3>
+            <form action="/add/product" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Product Name <span class="req">*</span></label><input name="name" required placeholder="Dangote XYZ"></div>
+                    <div class="form-group"><label>Category <span class="req">*</span></label><select name="category" required><option value="Cement">Cement</option><option value="Sugar">Sugar</option><option value="Salt">Salt</option><option value="Flour">Flour</option><option value="Fertilizer">Fertilizer</option><option value="Pasta">Pasta</option><option value="Rice">Rice</option><option value="Other">Other</option></select></div>
+                    <div class="form-group"><label>Unit</label><input name="unit" value="Tons"></div>
+                    <div class="form-group"><label>Price per Ton (₦) <span class="req">*</span></label><input name="price_per_ton" type="number" required placeholder="85000"></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Product</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Products <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>Category</th><th>Unit</th><th>Price/Ton</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.name }}</strong></td><td>{{ r.category }}</td><td>{{ r.unit }}</td>
+                        <td>₦{{ "{:,.0f}".format(r.price_per_ton) }}</td>
+                        <td><form action="/delete/products/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ DEPOTS ═══════════ -->
+        {% if table == 'depots' %}
+        <div class="sec-title"><h2>🏭 Depots</h2><span class="badge">{{ records|length }} depots</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Depot</h3>
+            <form action="/add/depot" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Depot Name <span class="req">*</span></label><input name="name" required placeholder="Depot Name"></div>
+                    <div class="form-group"><label>City <span class="req">*</span></label><input name="city" required placeholder="Lagos"></div>
+                    <div class="form-group"><label>State <span class="req">*</span></label><input name="state" required placeholder="Lagos"></div>
+                    <div class="form-group"><label>Region <span class="req">*</span></label><select name="region_id" required>{% for r in lookups.regions %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}</select></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Depot</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Depots <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>City</th><th>State</th><th>Region</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.name }}</strong></td><td>{{ r.city }}</td><td>{{ r.state }}</td><td>{{ r.region_name or '—' }}</td>
+                        <td><form action="/delete/depots/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- ═══════════ REGIONS ═══════════ -->
+        {% if table == 'regions' %}
+        <div class="sec-title"><h2>🌍 Regions</h2><span class="badge">{{ records|length }} regions</span></div>
+
+        <div class="form-card">
+            <h3>➕ Add New Region</h3>
+            <form action="/add/region" method="POST">
+                <div class="form-grid">
+                    <div class="form-group"><label>Region Name <span class="req">*</span></label><input name="name" required placeholder="North-West"></div>
+                    <div class="form-group"><label>Zone <span class="req">*</span></label><select name="zone" required><option value="Northern">Northern</option><option value="Southern">Southern</option></select></div>
+                </div>
+                <div class="btn-row"><button type="reset" class="btn btn-secondary">Clear</button><button type="submit" class="btn btn-success">💾 Save Region</button></div>
+            </form>
+        </div>
+
+        <div class="table-card">
+            <div class="th"><h3>📋 All Regions <span class="cnt">{{ records|length }}</span></h3></div>
+            <div class="tw">
+                <table>
+                    <thead><tr><th>ID</th><th>Name</th><th>Zone</th><th>Action</th></tr></thead>
+                    <tbody>
+                    {% for r in records %}
+                    <tr>
+                        <td>{{ r.id }}</td><td><strong>{{ r.name }}</strong></td><td>{{ r.zone }}</td>
+                        <td><form action="/delete/regions/{{ r.id }}" method="POST" onsubmit="return confirm('Delete?')"><button class="btn btn-danger btn-sm">🗑</button></form></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+</body>
+</html>
