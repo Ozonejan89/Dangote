@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dangote Truck Delivery — Executive Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+    --dg-blue:#004F9F;--dg-dark:#00264D;--dg-light:#E8F4FD;
+    --accent:#0B7A3E;--amber:#D97706;--red:#DC2626;--purple:#7C3AED;
+    --bg:#F1F5F9;--card:#FFF;--text:#1E293B;--muted:#64748B;
+    --border:#E2E8F0;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04);
+    --r:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text)}
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--dg-dark),var(--dg-blue));color:#fff;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.15)}
+.hdr-top{display:flex;justify-content:space-between;align-items:center;padding:16px 28px;flex-wrap:wrap;gap:12px}
+.hdr-brand{display:flex;align-items:center;gap:14px}
+.hdr-brand .logo{width:46px;height:46px;background:#fff;color:var(--dg-blue);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}
+.hdr-brand h1{font-size:20px;font-weight:700;letter-spacing:-.3px}
+.hdr-brand p{font-size:12px;opacity:.7}
+.hdr-ctrls{display:flex;gap:10px;align-items:center}
+.hdr-ctrls select,.hdr-ctrls button{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer}
+.hdr-ctrls select option{color:#333}
+.live{display:flex;align-items:center;gap:5px;font-size:11px;opacity:.7}
+.dot{width:7px;height:7px;background:#22C55E;border-radius:50%;animation:p 2s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+/* TABS */
+.tabs{display:flex;background:rgba(0,0,0,.15);padding:0 28px;overflow-x:auto}
+.tab{padding:11px 20px;background:0;border:0;color:rgba(255,255,255,.55);font-size:12.5px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:.2s}
+.tab.on,.tab:hover{color:#fff;border-bottom-color:#3B82F6;background:rgba(255,255,255,.05)}
+/* MAIN */
+.main{padding:22px 28px 40px;max-width:1560px;margin:0 auto}
+.pane{display:none}.pane.on{display:block}
+/* KPI STRIP */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:14px;margin-bottom:20px}
+.kpi{background:var(--card);border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);border-top:4px solid var(--dg-blue);transition:transform .15s}
+.kpi:hover{transform:translateY(-2px)}
+.kpi.g{border-top-color:var(--accent)}.kpi.a{border-top-color:var(--amber)}.kpi.r{border-top-color:var(--red)}.kpi.p{border-top-color:var(--purple)}
+.kpi-ic{font-size:22px;margin-bottom:8px}
+.kpi-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+.kpi-val{font-size:26px;font-weight:800;letter-spacing:-.8px;margin-top:2px}
+.kpi-chg{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:5px}
+.kpi-chg.up{background:#D1FAE5;color:#065F46}.kpi-chg.dn{background:#FEE2E2;color:#991B1B}
+.kpi-sub{font-size:10px;color:var(--muted);margin-top:3px}
+/* CARDS */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:18px}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+.card{background:var(--card);border-radius:var(--r);padding:22px;box-shadow:var(--shadow)}
+.card.full{grid-column:1/-1}
+.card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.card-t{font-size:15px;font-weight:700}.card-st{font-size:11px;color:var(--muted);margin-top:2px}
+.badge{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600}
+.badge.ok{background:#D1FAE5;color:#065F46}.badge.warn{background:#FEF3C7;color:#92400E}.badge.bad{background:#FEE2E2;color:#991B1B}
+/* TABLES */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:9px 12px;background:#F8FAFC;font-weight:600;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.4px;border-bottom:2px solid var(--border)}
+td{padding:10px 12px;border-bottom:1px solid var(--border)}
+tr:hover td{background:#F8FAFC}
+.sb{display:inline-flex;padding:3px 9px;border-radius:16px;font-size:10px;font-weight:600}
+.sb.act{background:#D1FAE5;color:#065F46}.sb.mnt{background:#FEF3C7;color:#92400E}.sb.off{background:#FEE2E2;color:#991B1B}.sb.trn{background:#DBEAFE;color:#1E40AF}
+.prog{width:70px;height:5px;background:#E2E8F0;border-radius:3px;display:inline-block;vertical-align:middle;margin-left:6px}
+.prog .f{height:100%;border-radius:3px}
+.prog .f.ok{background:var(--accent)}.prog .f.warn{background:var(--amber)}.prog .f.bad{background:var(--red)}
+/* ALERT */
+.alert{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:10px;margin-bottom:16px;font-size:12px;font-weight:500;border-left:4px solid}
+.alert.w{background:#FEF3C7;color:#92400E;border-color:var(--amber)}
+.alert.d{background:#FEE2E2;color:#991B1B;border-color:var(--red)}
+.alert.i{background:#DBEAFE;color:#1E40AF;border-color:var(--dg-blue)}
+@media(max-width:1100px){.grid,.grid.g3{grid-template-columns:1fr}}
+@media(max-width:700px){.main{padding:14px}.kpis{grid-template-columns:repeat(2,1fr)}.hdr-top{flex-direction:column}}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-top">
+    <div class="hdr-brand">
+      <div class="logo">D</div>
+      <div><h1>Dangote Truck Delivery Service</h1><p>Executive & Board Intelligence Dashboard</p></div>
+    </div>
+    <div class="hdr-ctrls">
+      <div class="live"><span class="dot"></span><span id="ts">Loading…</span></div>
+      <select id="pf"><option>FY 2024</option><option>Q4 2024</option><option>Q3 2024</option></select>
+      <button onclick="location.reload()">⟳ Refresh</button>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab on" onclick="go('overview',this)">📊 Overview</button>
+    <button class="tab" onclick="go('financial',this)">💰 Financial</button>
+    <button class="tab" onclick="go('fleet',this)">🚛 Fleet</button>
+    <button class="tab" onclick="go('safety',this)">🛡️ Safety</button>
+    <button class="tab" onclick="go('customers',this)">👥 Customers</button>
+    <button class="tab" onclick="go('routes',this)">🗺️ Routes & Drivers</button>
+  </nav>
+</header>
+
+<main class="main">
+
+<!-- ========== OVERVIEW ========== -->
+<section class="pane on" id="p-overview">
+  <div class="alert w">⚠️ <strong>Board Alert:</strong> <span id="alertText">Loading alerts…</span></div>
+  <div class="kpis" id="overviewKpis"></div>
+  <div class="grid">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Revenue vs Total Cost</div><div class="card-st">Monthly trend (₦) — FY 2024</div></div><span class="badge ok" id="marginBadge"></span></div><canvas id="cRevCost" height="270"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Delivery Volume & On-Time Rate</div><div class="card-st">Monthly deliveries with OTD %</div></div></div><canvas id="cDelVol" height="270"></canvas></div>
+  </div>
+  <div class="grid g3">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Revenue by Region</div><div class="card-st">All regions — YTD</div></div></div><canvas id="cRegion" height="250"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Fleet Status</div><div class="card-st">Current vehicle deployment</div></div></div><canvas id="cFleet" height="250"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Operating Cost Split</div><div class="card-st">YTD cost breakdown</div></div></div><canvas id="cCostPie" height="250"></canvas></div>
+  </div>
+  <div class="card full"><div class="card-hdr"><div><div class="card-t">Regional Performance Summary</div><div class="card-st">Key metrics by region</div></div></div><div class="tw"><table id="tRegion"><thead><tr><th>Region</th><th>Revenue (₦)</th><th>Trips</th><th>Avg OTD</th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+<!-- ========== FINANCIAL ========== -->
+<section class="pane" id="p-financial">
+  <div class="kpis" id="finKpis"></div>
+  <div class="grid">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Monthly P&L</div><div class="card-st">Revenue, Cost & Profit</div></div></div><canvas id="cPL" height="280"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Cost Category Trend</div><div class="card-st">Monthly OpEx by category</div></div></div><canvas id="cCostTrend" height="280"></canvas></div>
+  </div>
+  <div class="grid">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Revenue by Product</div><div class="card-st">Product contribution to revenue</div></div></div><canvas id="cProdRev" height="280"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Revenue per Ton by Product</div><div class="card-st">Margin analysis</div></div></div><canvas id="cRevTon" height="280"></canvas></div>
+  </div>
+</section>
+
+<!-- ========== FLEET ========== -->
+<section class="pane" id="p-fleet">
+  <div class="kpis" id="fleetKpis"></div>
+  <div class="grid">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Fleet Utilisation Trend</div><div class="card-st">Monthly active vehicle %</div></div></div><canvas id="cFleetUtil" height="270"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Maintenance Costs by Type</div><div class="card-st">YTD spending breakdown</div></div></div><canvas id="cMaintType" height="270"></canvas></div>
+  </div>
+  <div class="card full"><div class="card-hdr"><div><div class="card-t">Top Vehicles by Revenue</div><div class="card-st">Fleet performance detail</div></div></div><div class="tw"><table id="tFleet"><thead><tr><th>Truck ID</th><th>Type</th><th>Status</th><th>Depot</th><th>Trips</th><th>Revenue (₦)</th><th>Fuel (L)</th><th>Total km</th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+<!-- ========== SAFETY ========== -->
+<section class="pane" id="p-safety">
+  <div class="alert d" id="safetyAlert">🚨 Loading safety data…</div>
+  <div class="kpis" id="safetyKpis"></div>
+  <div class="grid">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Monthly Incident Trend</div><div class="card-st">By severity level</div></div></div><canvas id="cIncTrend" height="280"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Incidents by Type</div><div class="card-st">YTD breakdown</div></div></div><canvas id="cIncType" height="280"></canvas></div>
+  </div>
+</section>
+
+<!-- ========== CUSTOMERS ========== -->
+<section class="pane" id="p-customers">
+  <div class="kpis" id="custKpis"></div>
+  <div class="grid">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Monthly Complaints</div><div class="card-st">Complaint volume trend</div></div></div><canvas id="cCompTrend" height="270"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Complaints by Category</div><div class="card-st">YTD complaint breakdown</div></div></div><canvas id="cCompCat" height="270"></canvas></div>
+  </div>
+  <div class="card full"><div class="card-hdr"><div><div class="card-t">Top 10 Clients by Revenue</div><div class="card-st">Key account performance</div></div></div><div class="tw"><table id="tCust"><thead><tr><th>Client</th><th>Type</th><th>City</th><th>Revenue (₦)</th><th>Trips</th><th>OTD %</th><th>Rating</th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+<!-- ========== ROUTES & DRIVERS ========== -->
+<section class="pane" id="p-routes">
+  <div class="kpis" id="routeKpis"></div>
+  <div class="grid">
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Top 10 Routes by Revenue</div><div class="card-st">Most profitable corridors</div></div></div><canvas id="cRoutes" height="300"></canvas></div>
+    <div class="card"><div class="card-hdr"><div><div class="card-t">Driver Performance Scatter</div><div class="card-st">OTD % vs Customer Rating</div></div></div><canvas id="cDriverScatter" height="300"></canvas></div>
+  </div>
+  <div class="card full"><div class="card-hdr"><div><div class="card-t">Driver Leaderboard</div><div class="card-st">Top performers — composite score</div></div></div><div class="tw"><table id="tDrivers"><thead><tr><th>#</th><th>Driver</th><th>Depot</th><th>Trips</th><th>Revenue (₦)</th><th>OTD %</th><th>Safety</th><th>Rating</th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+</main>
+
+<script>
+// ─── DATA from Flask ───
+const D = {{ data | safe }};
+
+// ─── HELPERS ───
+const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmt = n => {
+    if(n==null) return '—';
+    if(Math.abs(n)>=1e9) return '₦'+(n/1e9).toFixed(2)+'B';
+    if(Math.abs(n)>=1e6) return '₦'+(n/1e6).toFixed(1)+'M';
+    if(Math.abs(n)>=1e3) return '₦'+(n/1e3).toFixed(0)+'K';
+    return '₦'+n.toLocaleString();
+};
+const fmtN = n => n==null?'—':Number(n).toLocaleString();
+const pct = n => n==null?'—':n.toFixed(1)+'%';
+
+function go(id, btn){
+    document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+    document.getElementById('p-'+id).classList.add('on');
+    btn.classList.add('on');
+}
+
+document.getElementById('ts').textContent = new Date().toLocaleString('en-NG',{dateStyle:'medium',timeStyle:'short'});
+
+// ─── CHART DEFAULTS ───
+Chart.defaults.font.family = "'Segoe UI',system-ui,sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.padding = 14;
+Chart.defaults.elements.line.tension = .35;
+Chart.defaults.elements.point.radius = 3;
+Chart.defaults.scale.grid = {color:'rgba(0,0,0,.04)'};
+const BLUE='#004F9F',GREEN='#0B7A3E',AMBER='#D97706',RED='#DC2626',PURPLE='#7C3AED',TEAL='#0891B2',GREY='#94A3B8';
+
+// ═══════════════════ OVERVIEW TAB ═══════════════════
+(function(){
+    const k = D.kpis;
+    const rev = k.total_revenue, cost = k.total_cost, margin = ((rev-cost)/rev*100);
+    const util = ((D.fleet_status['Active']||0)/D.fleet_total*100);
+
+    document.getElementById('alertText').textContent =
+        `Fuel costs account for ${pct(D.cost_totals.fuel/cost*100)} of OpEx. ${D.fleet_status['Maintenance']||0} vehicles currently in maintenance. ${D.safety_kpis.total_incidents} incidents recorded YTD.`;
+
+    document.getElementById('marginBadge').textContent = 'Margin ' + pct(margin);
+
+    const khtml = [
+        {ic:'💰',l:'Total Revenue',v:fmt(rev),c:'up',ct:pct(margin)+' margin',cls:''},
+        {ic:'📦',l:'Total Deliveries',v:fmtN(k.total_deliveries),c:'up',ct:'Completed',cls:'g'},
+        {ic:'⏱️',l:'On-Time Delivery',v:pct(k.otd_rate),c:k.otd_rate>92?'up':'dn',ct:'SLA Target: 92%',cls:'g'},
+        {ic:'⛽',l:'Total Fuel Cost',v:fmt(D.cost_totals.fuel),c:'dn',ct:pct(D.cost_totals.fuel/cost*100)+' of OpEx',cls:'a'},
+        {ic:'🚛',l:'Fleet Utilisation',v:pct(util),c:util>85?'up':'dn',ct:`${D.fleet_status['Active']||0}/${D.fleet_total} active`,cls:''},
+        {ic:'📏',l:'Total Tonnage',v:fmtN(Math.round(k.total_tons))+' t',c:'up',ct:'Delivered YTD',cls:'p'},
+    ];
+    document.getElementById('overviewKpis').innerHTML = khtml.map(k=>`
+        <div class="kpi ${k.cls}"><div class="kpi-ic">${k.ic}</div><div class="kpi-lbl">${k.l}</div>
+        <div class="kpi-val">${k.v}</div><span class="kpi-chg ${k.c}">${k.c=='up'?'▲':'▼'}</span>
+        <div class="kpi-sub">${k.ct}</div></div>`).join('');
+
+    const mt = D.monthly_trend;
+    const mLabels = mt.map(r=>M[parseInt(r.month)-1]);
+
+    // Revenue vs Cost
+    new Chart(document.getElementById('cRevCost'),{
+        type:'bar',
+        data:{labels:mLabels,datasets:[
+            {label:'Revenue',data:mt.map(r=>r.revenue),backgroundColor:'rgba(0,79,159,.8)',borderRadius:6,order:2},
+            {label:'Total Cost',data:mt.map(r=>r.total_cost),backgroundColor:'rgba(220,38,38,.3)',borderColor:'rgba(220,38,38,.6)',borderRadius:6,order:2},
+            {label:'Margin %',data:mt.map(r=>((r.revenue-r.total_cost)/r.revenue*100)),type:'line',borderColor:GREEN,backgroundColor:'rgba(11,122,62,.1)',fill:true,yAxisID:'y1',borderWidth:3,pointBackgroundColor:GREEN,order:1}
+        ]},
+        options:{responsive:true,interaction:{mode:'index',intersect:false},scales:{
+            y:{title:{display:true,text:'₦'},ticks:{callback:v=>fmt(v)}},
+            y1:{position:'right',min:0,max:50,title:{display:true,text:'%'},grid:{drawOnChartArea:false}}
+        }}
+    });
+
+    // Delivery Volume
+    new Chart(document.getElementById('cDelVol'),{
+        type:'bar',
+        data:{labels:mLabels,datasets:[
+            {label:'Deliveries',data:mt.map(r=>r.deliveries),backgroundColor:'rgba(124,58,237,.7)',borderRadius:6,order:2},
+            {label:'OTD %',data:mt.map(r=>r.otd_rate),type:'line',borderColor:AMBER,yAxisID:'y1',borderWidth:3,pointBackgroundColor:AMBER,order:1}
+        ]},
+        options:{responsive:true,scales:{
+            y:{title:{display:true,text:'Trips'}},
+            y1:{position:'right',min:80,max:100,title:{display:true,text:'%'},grid:{drawOnChartArea:false}}
+        }}
+    });
+
+    // Region Donut
+    const rr = D.revenue_by_region;
+    new Chart(document.getElementById('cRegion'),{type:'doughnut',data:{
+        labels:rr.map(r=>r.region),datasets:[{data:rr.map(r=>r.revenue),backgroundColor:[BLUE,GREEN,AMBER,PURPLE,TEAL,RED],borderWidth:0,cutout:'62%'}]
+    },options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+
+    // Fleet Donut
+    const fs = D.fleet_status;
+    new Chart(document.getElementById('cFleet'),{type:'doughnut',data:{
+        labels:Object.keys(fs),datasets:[{data:Object.values(fs),backgroundColor:[GREEN,AMBER,GREY,RED],borderWidth:0,cutout:'62%'}]
+    },options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+
+    // Cost Pie
+    const ct = D.cost_totals;
+    new Chart(document.getElementById('cCostPie'),{type:'doughnut',data:{
+        labels:['Fuel','Tolls','Driver Allowance','Maintenance','Other'],
+        datasets:[{data:[ct.fuel,ct.tolls,ct.driver,ct.maintenance,ct.other],backgroundColor:[RED,PURPLE,BLUE,AMBER,GREY],borderWidth:0,cutout:'62%'}]
+    },options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+
+    // Region Table
+    const tbody = document.querySelector('#tRegion tbody');
+    rr.forEach(r=>{
+        tbody.innerHTML += `<tr><td><strong>${r.region}</strong></td><td>${fmt(r.revenue)}</td><td>${fmtN(r.trips)}</td><td>${pct(0)}</td></tr>`;
+    });
+})();
+
+// ═══════════════════ FINANCIAL TAB ═══════════════════
+(function(){
+    const k = D.kpis, ct = D.cost_totals;
+    const rev=k.total_revenue, cost=k.total_cost, profit=rev-cost;
+    const finKpi = [
+        {ic:'💵',l:'Gross Revenue',v:fmt(rev),cls:''},
+        {ic:'📉',l:'Total OpEx',v:fmt(cost),cls:'r'},
+        {ic:'💎',l:'Gross Profit',v:fmt(profit),cls:'g'},
+        {ic:'📊',l:'Profit Margin',v:pct((profit/rev)*100),cls:'g'},
+        {ic:'⛽',l:'Fuel Spend',v:fmt(ct.fuel),cls:'a'},
+        {ic:'🔧',l:'Maintenance',v:fmt(ct.maintenance),cls:'a'},
+    ];
+    document.getElementById('finKpis').innerHTML = finKpi.map(k=>`
+        <div class="kpi ${k.cls}"><div class="kpi-ic">${k.ic}</div><div class="kpi-lbl">${k.l}</div>
+        <div class="kpi-val">${k.v}</div></div>`).join('');
+
+    const mt = D.monthly_trend;
+    const mL = mt.map(r=>M[parseInt(r.month)-1]);
+
+    // P&L Chart
+    new Chart(document.getElementById('cPL'),{type:'bar',data:{labels:mL,datasets:[
+        {label:'Revenue',data:mt.map(r=>r.revenue),backgroundColor:'rgba(0,79,159,.85)',borderRadius:5},
+        {label:'Profit',data:mt.map(r=>r.revenue-r.total_cost),backgroundColor:'rgba(11,122,62,.85)',borderRadius:5}
+    ]},options:{responsive:true,scales:{y:{ticks:{callback:v=>fmt(v)}}}}});
+
+    // Cost Trend
+    new Chart(document.getElementById('cCostTrend'),{type:'line',data:{labels:mL,datasets:[
+        {label:'Fuel',data:mt.map(r=>r.fuel_cost),borderColor:RED,backgroundColor:'rgba(220,38,38,.08)',fill:true,borderWidth:2},
+        {label:'Tolls',data:mt.map(r=>r.toll_cost),borderColor:PURPLE,backgroundColor:'rgba(124,58,237,.08)',fill:true,borderWidth:2},
+        {label:'Driver',data:mt.map(r=>r.driver_cost),borderColor:BLUE,backgroundColor:'rgba(0,79,159,.08)',fill:true,borderWidth:2},
+        {label:'Other',data:mt.map(r=>r.other_cost),borderColor:GREY,backgroundColor:'rgba(148,163,184,.08)',fill:true,borderWidth:2}
+    ]},options:{responsive:true,scales:{y:{ticks:{callback:v=>fmt(v)}}}}});
+
+    // Product Revenue
+    const pr = D.revenue_by_product;
+    new Chart(document.getElementById('cProdRev'),{type:'bar',data:{
+        labels:pr.map(r=>r.product.replace('Dangote ','')),
+        datasets:[{label:'Revenue (₦)',data:pr.map(r=>r.revenue),backgroundColor:[BLUE,GREEN,TEAL,AMBER,PURPLE,RED,'#EC4899','#06B6D4','#84CC16','#F97316'],borderRadius:6}]
+    },options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt(v)}}}}});
+
+    // Rev per Ton
+    new Chart(document.getElementById('cRevTon'),{type:'bar',data:{
+        labels:pr.map(r=>r.product.replace('Dangote ','')),
+        datasets:[{label:'₦ per Ton',data:pr.map(r=>r.tons>0?Math.round(r.revenue/r.tons):0),backgroundColor:'rgba(0,79,159,.75)',borderRadius:6}]
+    },options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmt(v)}}}}});
+})();
+
+// ═══════════════════ FLEET TAB ═══════════════════
+(function(){
+    const fs=D.fleet_status, tot=D.fleet_total;
+    const fKpi=[
+        {ic:'🚛',l:'Total Fleet',v:tot,cls:''},
+        {ic:'✅',l:'Active',v:fs['Active']||0,cls:'g'},
+        {ic:'🔧',l:'Maintenance',v:fs['Maintenance']||0,cls:'a'},
+        {ic:'🚫',l:'Out of Service',v:fs['Out of Service']||0,cls:'r'},
+        {ic:'📏',l:'Total Tonnage',v:fmtN(Math.round(D.kpis.total_tons))+' t',cls:'p'},
+        {ic:'📊',l:'Utilisation',v:pct((fs['Active']||0)/tot*100),cls:'g'},
+    ];
+    document.getElementById('fleetKpis').innerHTML = fKpi.map(k=>`
+        <div class="kpi ${k.cls}"><div class="kpi-ic">${k.ic}</div><div class="kpi-lbl">${k.l}</div>
+        <div class="kpi-val">${k.v}</div></div>`).join('');
+
+    // Util trend (simulated from monthly data)
+    const mt = D.monthly_trend;
+    const mL = mt.map(r=>M[parseInt(r.month)-1]);
+    const utilData = mt.map((_,i)=> 82 + i*0.8 + Math.random()*3);
+    new Chart(document.getElementById('cFleetUtil'),{type:'line',data:{labels:mL,datasets:[
+        {label:'Utilisation %',data:utilData,borderColor:BLUE,backgroundColor:'rgba(0,79,159,.1)',fill:true,borderWidth:3},
+        {label:'Target (85%)',data:Array(mt.length).fill(85),borderColor:RED,borderDash:[8,4],borderWidth:2,pointRadius:0}
+    ]},options:{responsive:true,scales:{y:{min:75,max:100}}}});
+
+    // Maintenance by type
+    const ms = D.maintenance_summary;
+    new Chart(document.getElementById('cMaintType'),{type:'bar',data:{
+        labels:ms.map(r=>r.type),datasets:[{label:'Cost (₦)',data:ms.map(r=>r.total_cost),backgroundColor:[BLUE,RED,AMBER,GREEN,PURPLE,TEAL,GREY],borderRadius:6}]
+    },options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt(v)}}}}});
+
+    // Fleet Table
+    const tb = document.querySelector('#tFleet tbody');
+    D.truck_detail.forEach(t=>{
+        const sc = t.status==='Active'?'act':t.status==='Maintenance'?'mnt':'off';
+        tb.innerHTML += `<tr><td><strong>${t.truck_id}</strong></td><td>${t.type}</td>
+        <td><span class="sb ${sc}">${t.status}</span></td><td>${t.depot}</td>
+        <td>${t.trips}</td><td>${fmt(t.revenue)}</td><td>${fmtN(Math.round(t.total_fuel_l))}</td>
+        <td>${fmtN(Math.round(t.total_km))}</td></tr>`;
+    });
+})();
+
+// ═══════════════════ SAFETY TAB ═══════════════════
+(function(){
+    const s = D.safety_kpis;
+    document.getElementById('safetyAlert').innerHTML =
+        `🚨 <strong>Safety Report:</strong> ${s.total_incidents} total incidents YTD. ${s.total_injuries} injuries reported. ₦${(s.total_damage/1e6).toFixed(1)}M in damage costs. ${s.resolved}/${s.total_incidents} resolved.`;
+
+    const sKpi=[
+        {ic:'🛡️',l:'Total Incidents',v:s.total_incidents,cls:'r'},
+        {ic:'🏥',l:'Injuries',v:s.total_injuries,cls:'r'},
+        {ic:'💥',l:'Damage Cost',v:fmt(s.total_damage),cls:'a'},
+        {ic:'✅',l:'Resolved',v:s.resolved+'/'+s.total_incidents,cls:'g'},
+        {ic:'📊',l:'Resolution Rate',v:pct(s.resolved/s.total_incidents*100),cls:'g'},
+        {ic:'⚠️',l:'Unresolved',v:s.total_incidents - s.resolved,cls:'r'},
+    ];
+    document.getElementById('safetyKpis').innerHTML = sKpi.map(k=>`
+        <div class="kpi ${k.cls}"><div class="kpi-ic">${k.ic}</div><div class="kpi-lbl">${k.l}</div>
+        <div class="kpi-val">${k.v}</div></div>`).join('');
+
+    // Incident Trend
+    const im = D.incidents_monthly;
+    new Chart(document.getElementById('cIncTrend'),{type:'bar',data:{
+        labels:im.map(r=>M[parseInt(r.month)-1]),
+        datasets:[
+            {label:'High',data:im.map(r=>r.high),backgroundColor:RED,borderRadius:4},
+            {label:'Medium',data:im.map(r=>r.medium),backgroundColor:AMBER,borderRadius:4},
+            {label:'Low',data:im.map(r=>r.low),backgroundColor:GREY,borderRadius:4},
+        ]
+    },options:{responsive:true,scales:{x:{stacked:true},y:{stacked:true,title:{display:true,text:'Count'}}}}});
+
+    // Incident Type
+    const it = D.incidents_by_type;
+    new Chart(document.getElementById('cIncType'),{type:'bar',data:{
+        labels:it.map(r=>r.type),datasets:[{label:'Count',data:it.map(r=>r.cnt),backgroundColor:[RED,AMBER,BLUE,PURPLE,GREEN,TEAL,GREY,'#EC4899'],borderRadius:6}]
+    },options:{responsive:true,plugins:{legend:{display:false}}}});
+})();
+
+// ═══════════════════ CUSTOMERS TAB ═══════════════════
+(function(){
+    const tc = D.top_customers;
+    const cc = D.complaints_by_cat;
+    const totalComp = cc.reduce((a,b)=>a+b.cnt,0);
+    const resolvedComp = cc.reduce((a,b)=>a+b.resolved,0);
+
+    const cKpi=[
+        {ic:'👥',l:'Active Clients',v:'20',cls:''},
+        {ic:'⭐',l:'Avg Rating',v:(D.kpis.avg_rating).toFixed(1)+'/5',cls:'g'},
+        {ic:'📢',l:'Total Complaints',v:totalComp,cls:'a'},
+        {ic:'✅',l:'Resolved',v:resolvedComp,cls:'g'},
+        {ic:'💎',l:'Top Client Rev',v:fmt(tc[0]?.revenue||0),cls:'p'},
+        {ic:'📊',l:'Resolution Rate',v:pct(resolvedComp/totalComp*100),cls:'g'},
+    ];
+    document.getElementById('custKpis').innerHTML = cKpi.map(k=>`
+        <div class="kpi ${k.cls}"><div class="kpi-ic">${k.ic}</div><div class="kpi-lbl">${k.l}</div>
+        <div class="kpi-val">${k.v}</div></div>`).join('');
+
+    // Complaints Trend
+    const cm = D.complaints_monthly;
+    new Chart(document.getElementById('cCompTrend'),{type:'line',data:{
+        labels:cm.map(r=>M[parseInt(r.month)-1]),
+        datasets:[{label:'Complaints',data:cm.map(r=>r.cnt),borderColor:RED,backgroundColor:'rgba(220,38,38,.1)',fill:true,borderWidth:3,pointBackgroundColor:RED}]
+    },options:{responsive:true,scales:{y:{beginAtZero:true}}}});
+
+    // Complaints by Category
+    new Chart(document.getElementById('cCompCat'),{type:'bar',data:{
+        labels:cc.map(r=>r.category),datasets:[
+            {label:'Total',data:cc.map(r=>r.cnt),backgroundColor:'rgba(220,38,38,.7)',borderRadius:6},
+            {label:'Resolved',data:cc.map(r=>r.resolved),backgroundColor:'rgba(11,122,62,.7)',borderRadius:6}
+        ]
+    },options:{responsive:true}});
+
+    // Customer Table
+    const tb = document.querySelector('#tCust tbody');
+    tc.forEach((c,i)=>{
+        tb.innerHTML += `<tr><td><strong>${c.name}</strong></td><td>${c.customer_type}</td><td>${c.city}</td>
+        <td>${fmt(c.revenue)}</td><td>${c.trips}</td>
+        <td><span class="sb ${c.otd>92?'act':'mnt'}">${pct(c.otd)}</span></td>
+        <td>⭐ ${c.rating.toFixed(1)}</td></tr>`;
+    });
+})();
+
+// ═══════════════════ ROUTES & DRIVERS TAB ═══════════════════
+(function(){
+    const tr = D.top_routes, dl = D.driver_board;
+    const rKpi=[
+        {ic:'🗺️',l:'Active Routes',v:'15',cls:''},
+        {ic:'👨‍✈️',l:'Active Drivers',v:'29',cls:'g'},
+        {ic:'📏',l:'Total Deliveries',v:fmtN(D.kpis.total_deliveries),cls:'p'},
+        {ic:'📊',l:'Top Route Rev',v:fmt(tr[0]?.revenue||0),cls:''},
+        {ic:'⭐',l:'Avg Driver Rating',v:(D.kpis.avg_rating).toFixed(1),cls:'g'},
+        {ic:'🏆',l:'Best Driver',v:dl[0]?.full_name||'—',cls:'g'},
+    ];
+    document.getElementById('routeKpis').innerHTML = rKpi.map(k=>`
+        <div class="kpi ${k.cls}"><div class="kpi-ic">${k.ic}</div><div class="kpi-lbl">${k.l}</div>
+        <div class="kpi-val">${k.v}</div></div>`).join('');
+
+    // Top Routes Bar
+    new Chart(document.getElementById('cRoutes'),{type:'bar',data:{
+        labels:tr.map(r=>r.route),datasets:[{label:'Revenue (₦)',data:tr.map(r=>r.revenue),backgroundColor:'rgba(0,79,159,.8)',borderRadius:6}]
+    },options:{responsive:true,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmt(v)}}}}});
+
+    // Driver Scatter
+    new Chart(document.getElementById('cDriverScatter'),{type:'scatter',data:{
+        datasets:[{label:'Drivers',data:dl.map(d=>({x:d.otd,y:d.rating,r:8})),
+        backgroundColor:'rgba(0,79,159,.6)',borderColor:BLUE,pointRadius:8,pointHoverRadius:12}]
+    },options:{responsive:true,scales:{
+        x:{title:{display:true,text:'On-Time Delivery %'},min:80,max:100},
+        y:{title:{display:true,text:'Customer Rating'},min:3,max:5}
+    },plugins:{tooltip:{callbacks:{label:function(ctx){return dl[ctx.dataIndex]?.full_name+' | OTD:'+ctx.parsed.x.toFixed(1)+'% | ⭐'+ctx.parsed.y.toFixed(1);}}}}}});
+
+    // Driver Table
+    const tb = document.querySelector('#tDrivers tbody');
+    const medals = ['🥇','🥈','🥉'];
+    dl.forEach((d,i)=>{
+        tb.innerHTML += `<tr><td>${medals[i]||i+1}</td><td><strong>${d.full_name}</strong></td><td>${d.depot_city}</td>
+        <td>${d.trips}</td><td>${fmt(d.revenue)}</td>
+        <td><span class="sb ${d.otd>92?'act':'mnt'}">${pct(d.otd)}</span></td>
+        <td>${d.safety_score}</td><td>⭐ ${d.rating.toFixed(1)}</td></tr>`;
+    });
+})();
+</script>
+</body>
+</html>
